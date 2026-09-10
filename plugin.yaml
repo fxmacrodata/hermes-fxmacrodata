@@ -1,0 +1,95 @@
+name: fxmacrodata
+version: 0.1.0
+manifest_version: 2
+kind: standalone
+author: FXMacroData
+license: MIT
+requires_hermes: '>=0.21'
+description: Sourced macroeconomic research through public FXMacroData tools
+homepage: https://fxmacrodata.com
+requires_env: []
+optional_env:
+  - FXMACRODATA_API_KEY
+  - FXMD_API_KEY
+python_dependencies:
+  - 'fxmacrodata-public-client @ https://github.com/fxmacrodata/fxmacrodata-public-client/releases/download/v0.1.0/fxmacrodata_public_client-0.1.0-py3-none-any.whl#sha256=5c60ff217243ff4001f178d4fdd8c3c8ce29001ad1ea0a170ed96606f0dd07c8'
+config_schema:
+  timeout_seconds:
+    type: number
+    default: 30
+    description: Request timeout in seconds
+provides_hooks: []
+provides_tools:
+  - fxmd_health
+  - fxmd_ping
+  - fxmd_forex
+  - fxmd_intraday_reference_rates
+  - fxmd_fx_sources
+  - fxmd_fx_source_universe
+  - fxmd_data_catalogue
+  - fxmd_release_calendar
+  - fxmd_market_sessions
+  - fxmd_rate_differentials
+  - fxmd_curves
+  - fxmd_financial_prices
+  - fxmd_press_releases
+  - fxmd_risk_sentiment
+  - fxmd_factors
+  - fxmd_event_predictions
+  - fxmd_latest_announcements
+  - fxmd_indicator_history
+  - fxmd_cot
+  - fxmd_latest_commodities
+  - fxmd_commodities
+  - fxmd_announcement_changes
+  - fxmd_stream_events
+  - fxmd_mcp_ping
+  - fxmd_mcp_mcp_capabilities
+  - fxmd_mcp_mcp_auth_guide
+  - fxmd_mcp_subscribe_for_mcp_access
+  - fxmd_mcp_data_catalogue
+  - fxmd_mcp_risk_sentiment
+  - fxmd_mcp_macro_news
+  - fxmd_mcp_release_calendar
+  - fxmd_mcp_release_calendar_visual_artifact
+  - fxmd_mcp_event_predictions
+  - fxmd_mcp_latest_announcements
+  - fxmd_mcp_announcement_changes
+  - fxmd_mcp_press_releases
+  - fxmd_mcp_macro_factor
+  - fxmd_mcp_fx_reference_sources
+  - fxmd_mcp_fx_reference_universe
+  - fxmd_mcp_fx_intraday_reference_rates
+  - fxmd_mcp_rate_curve
+  - fxmd_mcp_rate_differentials
+  - fxmd_mcp_latest_commodities
+  - fxmd_mcp_forex
+  - fxmd_mcp_seasonality
+  - fxmd_mcp_indicator_query
+  - fxmd_mcp_plot_visual_artifact
+  - fxmd_mcp_indicator_visual_artifact
+  - fxmd_mcp_forex_visual_artifact
+  - fxmd_mcp_commodities_visual_artifact
+  - fxmd_mcp_cot_visual_artifact
+  - fxmd_mcp_policy_rate_differential_visual_artifact
+  - fxmd_mcp_macro_briefing_task
+  - fxmd_mcp_indicator_intel_task
+  - fxmd_mcp_pair_intel_task
+  - fxmd_mcp_macro_heatmap_task
+  - fxmd_mcp_policy_scenario_modeler_task
+  - fxmd_mcp_macro_war_room_task
+  - fxmd_mcp_event_impact_replay_task
+  - fxmd_mcp_quant_scenario_lab_task
+  - fxmd_mcp_known_at_time_task
+  - fxmd_mcp_macro_regime_classifier_task
+  - fxmd_mcp_release_risk_score_task
+  - fxmd_mcp_portfolio_risk_engine_task
+  - fxmd_mcp_fx_trade_setup_task
+  - fxmd_mcp_fx_backtest_task
+  - fxmd_mcp_macro_research_pack_task
+  - fxmd_mcp_market_sessions
+  - fxmd_mcp_cot_data
+  - fxmd_mcp_commodities
+  - fxmd_mcp_financial_prices
+  - fxmd_mcp_official_dataset_family
+  - fxmd_usd_macro_brief

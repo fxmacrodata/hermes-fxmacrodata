@@ -1,0 +1,15 @@
+include README.md
+include LICENSE
+include CAPABILITIES.md
+include OPERATIONS.json
+include pyproject.toml
+include MANIFEST.in
+include PUBLIC_FILES.json
+include tests/transport_fixtures.py
+include __init__.py
+include plugin.yaml
+include hermes_fxmacrodata/__init__.py
+include hermes_fxmacrodata/plugin.py
+include hermes_fxmacrodata/response_safety.py
+include hermes_fxmacrodata/skills/macro-research/SKILL.md
+include tests/test_plugin.py

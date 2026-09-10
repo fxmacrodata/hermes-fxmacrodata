@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=77.0.3", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hermes-fxmacrodata"
+version = "0.1.0"
+description = "Native Hermes macroeconomic research tools with source citations"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = "MIT"
+dependencies = ["fxmacrodata-public-client @ https://github.com/fxmacrodata/fxmacrodata-public-client/releases/download/v0.1.0/fxmacrodata_public_client-0.1.0-py3-none-any.whl#sha256=5c60ff217243ff4001f178d4fdd8c3c8ce29001ad1ea0a170ed96606f0dd07c8"]
+
+[project.entry-points."hermes_agent.plugins"]
+fxmacrodata = "hermes_fxmacrodata"
+
+[project.urls]
+Homepage = "https://fxmacrodata.com"
+Documentation = "https://fxmacrodata.com/documentation/reference"
+
+[tool.setuptools]
+packages = ["hermes_fxmacrodata"]
+
+[tool.setuptools.package-data]
+hermes_fxmacrodata = ["skills/*/SKILL.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 140
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

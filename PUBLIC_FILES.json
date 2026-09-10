@@ -1,0 +1,19 @@
+{
+  "files": [
+    "CAPABILITIES.md",
+    "LICENSE",
+    "MANIFEST.in",
+    "OPERATIONS.json",
+    "PUBLIC_FILES.json",
+    "README.md",
+    "__init__.py",
+    "hermes_fxmacrodata/__init__.py",
+    "hermes_fxmacrodata/plugin.py",
+    "hermes_fxmacrodata/response_safety.py",
+    "hermes_fxmacrodata/skills/macro-research/SKILL.md",
+    "plugin.yaml",
+    "pyproject.toml",
+    "tests/test_plugin.py",
+    "tests/transport_fixtures.py"
+  ]
+}
