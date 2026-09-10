@@ -1,8 +1,12 @@
 # FXMacroData for Hermes
 
-Use FXMacroData's always-free public USD catalogue, indicator history and release calendar in Hermes without an API key or account. The plugin registers native research tools and a `/fxmacrodata` macro brief command, with source links in the results.
+Bring your FXMacroData subscription into Hermes for cross-currency macro research, full available indicator histories and release-calendar analysis. Native research tools keep source citations attached to the data in your conversations.
 
-The full inventory contains 23 public REST operations and 49 hosted MCP tools. Every operation has its own native tool and original input schema. Optional authenticated coverage uses your own process credentials. See [the operation matrix](CAPABILITIES.md).
+**[Subscribe to FXMacroData](https://fxmacrodata.com/subscribe?utm_source=github&utm_medium=referral&utm_campaign=open_source_integrations&utm_content=hermes_subscribe)** for access to covered non-USD datasets and full available history.
+
+Evaluate the plugin before subscribing with public USD catalogue, recent indicator history and release-calendar access, which require no API key or account.
+
+The full inventory contains 23 public REST operations and 49 hosted MCP tools, plus a `/fxmacrodata` USD macro brief command. Every operation has its own native tool and original input schema. Connect your subscription through your own process credentials. See [the operation matrix](CAPABILITIES.md).
 
 ## Install
 
@@ -20,7 +24,7 @@ Restart Hermes after enabling the plugin. Ask: “Use FXMacroData to discover US
 
 For a directory-plugin installation, place the extracted plugin directory beneath your Hermes plugins directory, install its Python package in Hermes' environment, then enable `fxmacrodata`. The supplied `plugin.yaml`, `register(ctx)` entry point and bundled skill support the native directory discovery path. Plugin Doctor can validate the extracted directory with `hermes plugins doctor /path/to/hermes-fxmacrodata --ci`.
 
-## Optional credentials and settings
+## Connect your subscription
 
 Provide `FXMACRODATA_API_KEY` or `FXMD_API_KEY` through the process environment or a configured Hermes secret source. Do not place keys in prompts, tool arguments, plugin settings, shared files or command history. Credentials are read when a call starts; each call closes its own HTTP/MCP session.
 
