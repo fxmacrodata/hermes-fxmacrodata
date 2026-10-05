@@ -1,5 +1,5 @@
 name: fxmacrodata
-version: 0.1.0
+version: 0.2.0
 manifest_version: 2
 kind: standalone
 author: FXMacroData
@@ -10,9 +10,11 @@ homepage: https://fxmacrodata.com/?utm_source=hermes&utm_medium=integration&utm_
 requires_env: []
 optional_env:
   - FXMACRODATA_API_KEY
-  - FXMD_API_KEY
 python_dependencies:
-  - 'fxmacrodata-public-client @ https://github.com/fxmacrodata/fxmacrodata-public-client/releases/download/v0.1.0/fxmacrodata_public_client-0.1.0-py3-none-any.whl#sha256=5c60ff217243ff4001f178d4fdd8c3c8ce29001ad1ea0a170ed96606f0dd07c8'
+  - 'requests>=2.31,<3'
+  - 'urllib3>=2,<3'
+  - 'jsonschema>=4.18,<5'
+  - 'referencing>=0.28,<1'
 config_schema:
   timeout_seconds:
     type: number

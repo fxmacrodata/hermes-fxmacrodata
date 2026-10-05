@@ -7,10 +7,11 @@ from datetime import datetime, timedelta, timezone
 import json
 import os
 from pathlib import Path
+import re
 from typing import Any
 
-from fxmacrodata_public import FXMacroDataClient as _PublicClient
-from fxmacrodata_public import FXMacroDataError, Result, list_operations
+from .public_client import FXMacroDataClient as _PublicClient
+from .public_client import FXMacroDataError, Result, list_operations
 
 from .response_safety import sanitize_response
 
@@ -28,7 +29,8 @@ GUIDANCE = (
     "Public USD catalogue, indicator history and calendar need no API key. "
     "Keep source URLs and timestamp fields in answers. Distinguish observed releases, "
     "scheduled releases, market consensus and FXMacroData-generated predictions. "
-    "Empty records mean unavailable; never invent data. MCP resources are preserved "
+    "Empty records mean unavailable; never invent data. When a result carries notices, "
+    "relay them: free-tier data can be delayed or limited to a recent window. MCP resources are preserved "
     "as structured results; this plugin does not render MCP Apps."
 )
 BRIEF_SCHEMA = {
@@ -40,33 +42,83 @@ BRIEF_SCHEMA = {
 }
 
 
+SUBSCRIBE_URL = "https://fxmacrodata.com/subscribe"
+NOTICE_FIELDS = ("freemium_window", "freemium_delay")
+ERROR_CODE_PATTERN = re.compile(r"[a-z0-9_]{1,64}")
+ACCESS_ERROR_CODES = frozenset({"api_key_required", "subscription_required", "invalid_api_key"})
+
+
+def _response_body(payload: Any) -> Any:
+    """Return the REST body, or the structured content of an MCP tool result."""
+    if isinstance(payload, dict) and isinstance(payload.get("structuredContent"), dict):
+        return payload["structuredContent"]
+    return payload
+
+
+def access_notices(payload: Any) -> list[str]:
+    """Collect the free-tier window and delay messages so delayed data is never presented as current."""
+    body = _response_body(payload)
+    if not isinstance(body, dict):
+        return []
+    notices = []
+    for field_name in NOTICE_FIELDS:
+        value = body.get(field_name)
+        message = value.get("message") if isinstance(value, dict) else value
+        if isinstance(message, str) and message.strip():
+            notices.append(message.strip())
+    return notices
+
+
+def error_body_message(payload: Any) -> str | None:
+    """Turn a successful HTTP status that carries an error body into an actionable error."""
+    body = _response_body(payload)
+    if not isinstance(body, dict) or "data" in body:
+        return None
+    code = body.get("error")
+    if not isinstance(code, str) or not code.strip():
+        return None
+    code = code.strip().lower()
+    if code in ACCESS_ERROR_CODES:
+        return (f"FXMacroData needs an authorized API key for this request ({code}). "
+                f"Set FXMACRODATA_API_KEY; keys are available at {SUBSCRIBE_URL}.")
+    if ERROR_CODE_PATTERN.fullmatch(code):
+        return f"FXMacroData returned an error ({code}). Check parameters and access, then retry."
+    return "FXMacroData returned an error. Check parameters and access, then retry."
+
+
 def _envelope(result: Result) -> dict[str, Any]:
     output = result.as_dict()
     output["provider_url"] = SITE_URL
     output["citations"] = [{"title": "FXMacroData", "url": result.source_url}]
+    notices = access_notices(result.payload)
+    if notices:
+        output["notices"] = notices
     return output
+
+
+def _error(operation: str, message: str) -> dict[str, Any]:
+    return {"operation": operation, "error": message, "provider_url": SITE_URL}
 
 
 def query(operation: str, arguments: dict[str, Any], timeout: float = 30) -> dict[str, Any]:
     """Execute with a per-call client so secrets and sessions are never persisted."""
-    key = os.getenv("FXMACRODATA_API_KEY") or os.getenv("FXMD_API_KEY") or ""
+    key = os.getenv("FXMACRODATA_API_KEY", "").strip()
     try:
         with FXMacroDataClient(api_key=key, timeout=timeout) as client:
             result = client.execute(operation, arguments)
-            safe_result = Result(operation, sanitize_response(result.payload, key), sanitize_response(result.source_url, key))
-            return _envelope(safe_result)
+            payload = sanitize_response(result.payload, key)
+            message = error_body_message(payload)
+            if message is not None:
+                return _error(operation, message)
+            return _envelope(Result(operation, payload, sanitize_response(result.source_url, key)))
     except FXMacroDataError as exc:
         try:
             message = sanitize_response(str(exc), key)
         except ValueError:
             message = "FXMacroData could not safely decode the response. Retry the request."
-        return {"operation": operation, "error": message, "provider_url": SITE_URL}
+        return _error(operation, message)
     except Exception:
-        return {
-            "operation": operation,
-            "error": "FXMacroData request failed. Check parameters and access, then retry.",
-            "provider_url": SITE_URL,
-        }
+        return _error(operation, "FXMacroData request failed. Check parameters and access, then retry.")
 
 
 def usd_brief(arguments: dict[str, Any], timeout: float = 30) -> dict[str, Any]:

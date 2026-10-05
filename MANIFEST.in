@@ -13,3 +13,9 @@ include hermes_fxmacrodata/plugin.py
 include hermes_fxmacrodata/response_safety.py
 include hermes_fxmacrodata/skills/macro-research/SKILL.md
 include tests/test_plugin.py
+include hermes_fxmacrodata/public_client/__init__.py
+include hermes_fxmacrodata/public_client/client.py
+include hermes_fxmacrodata/public_client/transport.py
+include hermes_fxmacrodata/public_client/operations.json
+include hermes_fxmacrodata/public_client/mcp-tools.json
+include hermes_fxmacrodata/public_client/py.typed

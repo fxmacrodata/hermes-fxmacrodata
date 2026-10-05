@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hermes-fxmacrodata"
-version = "0.1.0"
+version = "0.2.0"
 description = "Native Hermes macroeconomic research tools with source citations"
 readme = "README.md"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.11,<3.15"
 license = "MIT"
-dependencies = ["fxmacrodata-public-client @ https://github.com/fxmacrodata/fxmacrodata-public-client/releases/download/v0.1.0/fxmacrodata_public_client-0.1.0-py3-none-any.whl#sha256=5c60ff217243ff4001f178d4fdd8c3c8ce29001ad1ea0a170ed96606f0dd07c8"]
+dependencies = ["requests>=2.31,<3", "urllib3>=2,<3", "jsonschema>=4.18,<5", "referencing>=0.28,<1"]
 
 [project.entry-points."hermes_agent.plugins"]
 fxmacrodata = "hermes_fxmacrodata"
@@ -19,10 +19,10 @@ Homepage = "https://fxmacrodata.com/?utm_source=pypi&utm_medium=referral&utm_cam
 Documentation = "https://fxmacrodata.com/documentation/reference?utm_source=pypi&utm_medium=referral&utm_campaign=hermes-fxmacrodata&utm_content=docs"
 
 [tool.setuptools]
-packages = ["hermes_fxmacrodata"]
+packages = ["hermes_fxmacrodata", "hermes_fxmacrodata.public_client"]
 
 [tool.setuptools.package-data]
-hermes_fxmacrodata = ["skills/*/SKILL.md"]
+hermes_fxmacrodata = ["skills/*/SKILL.md", "public_client/*.json", "public_client/py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
