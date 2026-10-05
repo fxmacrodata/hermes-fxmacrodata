@@ -93,7 +93,7 @@ def test_native_runtime_attribution_identifies_hermes(manager, transport, name, 
 
 @pytest.mark.parametrize("operation", ["ping", "mcp_ping", "stream_events"])
 def test_response_echo_is_redacted_before_native_output(manager, transport, monkeypatch, operation):
-    key = "synthetic/credential + alpha"
+    key = "synthetic/credential+alpha"
     monkeypatch.setenv("FXMACRODATA_API_KEY", key)
     transport.payload = {
         "data": [
@@ -135,7 +135,7 @@ def test_session_cleanup_and_credential_rotation(manager, transport, monkeypatch
 
 @pytest.mark.parametrize("sensitive_value", [True, False, None, 123])
 def test_encoded_mcp_text_never_exposes_credentials_in_projected_records(manager, transport, monkeypatch, sensitive_value):
-    key = "synthetic/review-key + never-valid"
+    key = "synthetic/review-key+never-valid"
     monkeypatch.setenv("FXMACRODATA_API_KEY", key)
     encoded = "".join(f"\\u{ord(character):04x}" for character in key)
     payload_text = '{"note":"' + encoded + '","apiKey":' + json.dumps(sensitive_value) + ',"value":1.25,"requires_api_key":false}'
