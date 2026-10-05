@@ -6,7 +6,7 @@ author: FXMacroData
 license: MIT
 requires_hermes: '>=0.21'
 description: Sourced macroeconomic research through public FXMacroData tools
-homepage: https://fxmacrodata.com
+homepage: https://fxmacrodata.com/?utm_source=hermes&utm_medium=integration&utm_campaign=hermes-fxmacrodata&utm_content=homepage
 requires_env: []
 optional_env:
   - FXMACRODATA_API_KEY

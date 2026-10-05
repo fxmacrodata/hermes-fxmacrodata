@@ -22,7 +22,7 @@ class FXMacroDataClient(_PublicClient):
         return sanitize_response(value, self._api_key)
 
 
-SITE_URL = "https://fxmacrodata.com/?utm_source=hermes&utm_medium=integration&utm_campaign=open_source_integrations&utm_content=hermes_plugin"
+SITE_URL = "https://fxmacrodata.com/?utm_source=hermes&utm_medium=integration&utm_campaign=hermes-fxmacrodata&utm_content=app"
 GUIDANCE = (
     "Discover indicator slugs with fxmd_data_catalogue before requesting history. "
     "Public USD catalogue, indicator history and calendar need no API key. "

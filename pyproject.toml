@@ -15,8 +15,8 @@ dependencies = ["fxmacrodata-public-client @ https://github.com/fxmacrodata/fxma
 fxmacrodata = "hermes_fxmacrodata"
 
 [project.urls]
-Homepage = "https://fxmacrodata.com"
-Documentation = "https://fxmacrodata.com/documentation/reference"
+Homepage = "https://fxmacrodata.com/?utm_source=pypi&utm_medium=referral&utm_campaign=hermes-fxmacrodata&utm_content=homepage"
+Documentation = "https://fxmacrodata.com/documentation/reference?utm_source=pypi&utm_medium=referral&utm_campaign=hermes-fxmacrodata&utm_content=docs"
 
 [tool.setuptools]
 packages = ["hermes_fxmacrodata"]

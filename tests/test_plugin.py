@@ -86,8 +86,8 @@ def test_native_runtime_attribution_identifies_hermes(manager, transport, name, 
         assert parse_qs(url.query) == {
             "utm_source": ["hermes"],
             "utm_medium": ["integration"],
-            "utm_campaign": ["open_source_integrations"],
-            "utm_content": ["hermes_plugin"],
+            "utm_campaign": ["hermes-fxmacrodata"],
+            "utm_content": ["app"],
         }
 
 
