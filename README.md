@@ -2,7 +2,7 @@
 
 Bring your FXMacroData subscription into Hermes for cross-currency macro research, full available indicator histories and release-calendar analysis. Native research tools keep source citations attached to the data in your conversations.
 
-**[Subscribe to FXMacroData](https://fxmacrodata.com/subscribe?utm_source=github&utm_medium=referral&utm_campaign=open_source_integrations&utm_content=hermes_subscribe)** for access to covered non-USD datasets and full available history.
+**[Subscribe to FXMacroData](https://fxmacrodata.com/subscribe?utm_source=github&utm_medium=referral&utm_campaign=hermes-fxmacrodata&utm_content=subscribe)** for access to covered non-USD datasets and full available history.
 
 Evaluate the plugin before subscribing with public USD catalogue, recent indicator history and release-calendar access, which require no API key or account.
 
@@ -38,4 +38,4 @@ Tool results contain the original response in `data`, an additive `records` view
 
 Native tool registration uses no network calls and no credentials. Responses are sanitized before their JSON text is projected into records or sent to Hermes. The plugin emits no telemetry; static campaign tags appear only on website links.
 
-[FXMacroData](https://fxmacrodata.com/?utm_source=github&utm_medium=referral&utm_campaign=open_source_integrations&utm_content=hermes_readme) · [Public API reference](https://fxmacrodata.com/documentation/reference?utm_source=github&utm_medium=referral&utm_campaign=open_source_integrations&utm_content=hermes_docs)
+[FXMacroData](https://fxmacrodata.com/?utm_source=github&utm_medium=referral&utm_campaign=hermes-fxmacrodata&utm_content=readme) · [Public API reference](https://fxmacrodata.com/documentation/reference?utm_source=github&utm_medium=referral&utm_campaign=hermes-fxmacrodata&utm_content=docs)
