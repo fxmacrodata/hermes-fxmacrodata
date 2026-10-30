@@ -11,4 +11,4 @@ When a result includes `notices`, relay them: free-tier data can be delayed or l
 
 Every REST operation and hosted MCP tool has an `fxmd_` tool. Use its native input schema; never supply credentials as tool arguments. Empty results are unavailable for the selected window. A partial brief must retain failed sections rather than silently removing them. Streaming tools return a bounded capture, not an ongoing subscription. MCP resource content is available as structured results; interactive Apps are not rendered.
 
-Provider and documentation: https://fxmacrodata.com/documentation/reference
+Provider and documentation: https://fxmacrodata.com/documentation/reference?utm_source=hermes&utm_medium=integration&utm_campaign=hermes-fxmacrodata&utm_content=skill-reference

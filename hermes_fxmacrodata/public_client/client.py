@@ -27,7 +27,7 @@ MCP_URL = "https://mcp.fxmacrodata.com/mcp"
 WEBSITE = "https://fxmacrodata.com"
 MAX_RESPONSE_BYTES = 10 * 1024 * 1024
 MCP_PROTOCOL_VERSION = "2025-03-26"
-SUBSCRIBE_URL = "https://fxmacrodata.com/subscribe"
+SUBSCRIBE_URL = "https://fxmacrodata.com/subscribe?utm_source=hermes&utm_medium=integration&utm_campaign=hermes-fxmacrodata&utm_content=access-error"
 _API_KEY_PATTERN = re.compile(r"[\x21-\x7e]+")
 
 
@@ -174,7 +174,7 @@ class FXMacroDataClient:
                 raise ValueError
         except (ValueError, TypeError, OverflowError):
             raise FXMacroDataError("The request timeout must be a finite number.") from None
-        self._api_key = _clean_api_key(api_key if api_key is not None else os.getenv("FXMACRODATA_API_KEY", ""))
+        self._api_key = _clean_api_key(api_key if api_key is not None else "")
         self.timeout = min(max(timeout_value, 1), 120)
         self._session = session or requests.Session()
         self._owns_session = session is None
@@ -361,6 +361,14 @@ class FXMacroDataClient:
         if arguments is not None and (not isinstance(arguments, dict) or any(not isinstance(key, str) for key in arguments)):
             raise FXMacroDataError("FXMacroData arguments must be an object with string keys.")
         args = dict(arguments or {})
+        # Accept customary lower-case codes when the published REST schema uses
+        # an upper-case enum; leave MCP-specific enums unchanged.
+        for name in CURRENCY_FIELDS:
+            value = args.get(name)
+            schema = op.input_schema.get("properties", {}).get(name, {})
+            choices = schema.get("enum", [])
+            if isinstance(value, str) and value.upper() in choices:
+                args[name] = value.upper()
         if any(k.lower() in {"api_key", "access_token", "authorization", "url", "base_url"} for k in args):
             raise FXMacroDataError("Credentials and endpoint overrides are not operation arguments.")
         try:
@@ -391,7 +399,7 @@ class FXMacroDataClient:
         if operation_name == "stream_events":
             payload = self._stream(path, params, headers, args)
         else:
-            payload = self._read_json(self._request("GET", API_ORIGIN + path, params=params, headers=headers))
+            payload = self._read_json(self._request(op.method, API_ORIGIN + path, params=params, headers=headers, body=args.get("body") if op.method == "POST" else None))
         return Result(op.name, self._safe(payload), API_ORIGIN + path)
 
     @staticmethod

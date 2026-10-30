@@ -41,7 +41,7 @@ def transport(monkeypatch):
 
 def test_installed_entrypoint_registers_every_schema_skill_and_command(manager):
     assert len([e for e in entry_points(group="hermes_agent.plugins") if e.name == "fxmacrodata"]) == 1
-    expected = {"fxmd_" + operation.name for operation in list_operations()} | {"fxmd_usd_macro_brief"}
+    expected = {"fxmd_" + operation.name for operation in list_operations()} | {"fxmd_usd_macro_brief", "fxmd_indicator_history_snapshot"}
     assert set(manager._plugins["fxmacrodata"].tools_registered) == expected
     for operation in list_operations():
         assert registry.get_entry("fxmd_" + operation.name, scope=manager.scope_key).schema["parameters"] == operation.input_schema

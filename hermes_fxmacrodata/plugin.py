@@ -5,7 +5,6 @@ from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import json
-import os
 from pathlib import Path
 import re
 from typing import Any
@@ -14,6 +13,7 @@ from .public_client import FXMacroDataClient as _PublicClient
 from .public_client import FXMacroDataError, Result, list_operations
 
 from .response_safety import sanitize_response
+from .pagination import PageTraversal
 
 
 class FXMacroDataClient(_PublicClient):
@@ -31,7 +31,10 @@ GUIDANCE = (
     "scheduled releases, market consensus and FXMacroData-generated predictions. "
     "Empty records mean unavailable; never invent data. When a result carries notices, "
     "relay them: free-tier data can be delayed or limited to a recent window. MCP resources are preserved "
-    "as structured results; this plugin does not render MCP Apps."
+    "as structured results; this plugin does not render MCP Apps. Publication status and "
+    "assumed-time flags qualify release clocks; capture and schedule timestamps are not "
+    "confirmed publication. Individual API tools return pages; use the history snapshot "
+    "tool for a version-pinned traversal of the requested, authorised window."
 )
 BRIEF_SCHEMA = {
     "type": "object",
@@ -42,7 +45,7 @@ BRIEF_SCHEMA = {
 }
 
 
-SUBSCRIBE_URL = "https://fxmacrodata.com/subscribe"
+SUBSCRIBE_URL = "https://fxmacrodata.com/subscribe?utm_source=hermes&utm_medium=integration&utm_campaign=hermes-fxmacrodata&utm_content=access-error"
 NOTICE_FIELDS = ("freemium_window", "freemium_delay")
 ERROR_CODE_PATTERN = re.compile(r"[a-z0-9_]{1,64}")
 ACCESS_ERROR_CODES = frozenset({"api_key_required", "subscription_required", "invalid_api_key"})
@@ -90,6 +93,13 @@ def _envelope(result: Result) -> dict[str, Any]:
     output = result.as_dict()
     output["provider_url"] = SITE_URL
     output["citations"] = [{"title": "FXMacroData", "url": result.source_url}]
+    seen = {result.source_url}
+    for row in output.get("records", []):
+        if isinstance(row, dict):
+            source = row.get("source_url")
+            if isinstance(source, str) and source.startswith("https://") and source not in seen:
+                output["citations"].append({"title": "Original publisher source", "url": source})
+                seen.add(source)
     notices = access_notices(result.payload)
     if notices:
         output["notices"] = notices
@@ -100,9 +110,21 @@ def _error(operation: str, message: str) -> dict[str, Any]:
     return {"operation": operation, "error": message, "provider_url": SITE_URL}
 
 
+def profile_key():
+    """Read only the active Hermes profile's declared optional secret."""
+    try:
+        from agent.secret_scope import get_secret
+    except ImportError:
+        return ""  # No host secret route: public access only; never read process/file credentials.
+    value = get_secret("FXMACRODATA_API_KEY", "")
+    if not isinstance(value, str):
+        raise FXMacroDataError("Invalid configured FXMacroData credential.")
+    return value.strip()
+
+
 def query(operation: str, arguments: dict[str, Any], timeout: float = 30) -> dict[str, Any]:
     """Execute with a per-call client so secrets and sessions are never persisted."""
-    key = os.getenv("FXMACRODATA_API_KEY", "").strip()
+    key = profile_key()
     try:
         with FXMacroDataClient(api_key=key, timeout=timeout) as client:
             result = client.execute(operation, arguments)
@@ -131,11 +153,11 @@ def usd_brief(arguments: dict[str, Any], timeout: float = 30) -> dict[str, Any]:
         return {"error": "Use an optional indicator slug; credentials are not tool arguments.", "provider_url": SITE_URL}
     today = datetime.now(timezone.utc).date()
     requests = (
-        ("data_catalogue", {"currency": "usd"}),
-        ("indicator_history", {"currency": "usd", "indicator": arguments.get("indicator", "policy_rate"), "limit": 10}),
+        ("data_catalogue", {"currency": "USD"}),
+        ("indicator_history", {"currency": "USD", "indicator": arguments.get("indicator", "policy_rate"), "limit": 10}),
         (
             "release_calendar",
-            {"currency": "usd", "start_date": today.isoformat(), "end_date": (today + timedelta(days=7)).isoformat(), "timezone": "UTC"},
+            {"currency": "USD", "start_date": today.isoformat(), "end_date": (today + timedelta(days=7)).isoformat(), "timezone": "UTC"},
         ),
     )
     sections = [query(name, args, timeout) for name, args in requests]
@@ -143,9 +165,42 @@ def usd_brief(arguments: dict[str, Any], timeout: float = 30) -> dict[str, Any]:
         "title": "USD macro research brief",
         "sections": sections,
         "complete": all("error" not in section for section in sections),
+        "scope": {"currency": "USD", "history_limit": 10,
+                  "calendar_start": today.isoformat(), "calendar_end": (today + timedelta(days=7)).isoformat(),
+                  "timezone": "UTC", "history_complete": False},
         "instructions": GUIDANCE,
         "provider_url": SITE_URL,
     }
+
+
+HISTORY_SCHEMA = deepcopy(next(op.input_schema for op in list_operations() if op.name == "indicator_history"))
+for _field in ("limit", "page", "offset", "dataset_version"):
+    HISTORY_SCHEMA.get("properties", {}).pop(_field, None)
+
+
+def history_snapshot(arguments, timeout=30):
+    """Read an eligible window atomically across version-pinned pages."""
+    import jsonschema
+    try:
+        jsonschema.Draft202012Validator(HISTORY_SCHEMA).validate(arguments)
+        traversal = PageTraversal()
+        all_rows = []
+        envelopes = []
+        while not traversal.done:
+            section = query("indicator_history", {**arguments, **traversal.parameters()}, timeout)
+            if "error" in section:
+                return _error("indicator_history_snapshot", section["error"])
+            payload = section["data"]
+            traversal.advance(payload)
+            all_rows.extend(payload["data"])
+            envelopes.append({key: value for key, value in payload.items() if key != "data"})
+        result = {**envelopes[0], "data": all_rows,
+                  "snapshot": {"complete": True, "page_count": traversal.pages,
+                               "scope": "requested window and authorised access", "dataset_version": traversal.version},
+                  "page_metadata": envelopes}
+        return _envelope(Result("indicator_history_snapshot", result, "https://api.fxmacrodata.com/v1/announcements"))
+    except Exception:
+        return _error("indicator_history_snapshot", "History traversal failed; no complete snapshot returned. Check access, dates and dataset version, then restart.")
 
 
 def register(ctx) -> None:
@@ -191,6 +246,15 @@ def register(ctx) -> None:
         },
         handler=brief_handler,
         description="Sourced USD macro research workflow",
+    )
+
+    ctx.register_tool(
+        name="fxmd_indicator_history_snapshot", toolset="fxmacrodata",
+        schema={"name": "fxmd_indicator_history_snapshot",
+                "description": "Read all pages of the requested authorised history window, pinned to its first dataset version.",
+                "parameters": deepcopy(HISTORY_SCHEMA)},
+        handler=lambda args, **kwargs: json.dumps(history_snapshot(args, timeout()), ensure_ascii=False),
+        description="Version-pinned history snapshot",
     )
 
     def brief_command(raw_args: str):

@@ -8,6 +8,7 @@
     "README.md",
     "__init__.py",
     "hermes_fxmacrodata/__init__.py",
+    "hermes_fxmacrodata/pagination.py",
     "hermes_fxmacrodata/plugin.py",
     "hermes_fxmacrodata/public_client/__init__.py",
     "hermes_fxmacrodata/public_client/client.py",
@@ -19,7 +20,10 @@
     "hermes_fxmacrodata/skills/macro-research/SKILL.md",
     "plugin.yaml",
     "pyproject.toml",
+    "tests/test_owned_contract.py",
     "tests/test_plugin.py",
-    "tests/transport_fixtures.py"
+    "tests/test_snapshot.py",
+    "tests/transport_fixtures.py",
+    "tests/test_refresh.py"
   ]
 }

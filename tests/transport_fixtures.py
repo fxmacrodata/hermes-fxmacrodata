@@ -41,13 +41,13 @@ class Transport:
         assert "?" not in url and kwargs["allow_redirects"] is False
         body = kwargs.get("json")
         value = deepcopy(self.payload)
-        if body and body["method"] == "initialize":
+        if body and body.get("method") == "initialize":
             value = {"jsonrpc": "2.0", "id": body["id"], "result": {"protocolVersion": "2025-03-26"}}
-        elif body and body["method"] == "notifications/initialized":
+        elif body and body.get("method") == "notifications/initialized":
             response = Response(status=202)
             self.responses.append(response)
             return response
-        elif body and body["method"] == "tools/call":
+        elif body and body.get("method") == "tools/call":
             value = {"jsonrpc": "2.0", "id": body["id"], "result": {"structuredContent": value, "isError": False}}
         response = Response(value, self.status, stream="/stream" in url)
         self.responses.append(response)

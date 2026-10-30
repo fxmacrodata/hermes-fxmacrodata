@@ -1,47 +1,57 @@
 # FXMacroData for Hermes
 
-Bring your FXMacroData subscription into Hermes for cross-currency macro research, full available indicator histories and release-calendar analysis. Native research tools keep source citations attached to the data in your conversations.
+Research a macro question with source-backed data in Hermes: discover the indicator, inspect its history, check the release schedule and carry the evidence into your answer.
 
-**[Subscribe to FXMacroData](https://fxmacrodata.com/subscribe?utm_source=github&utm_medium=referral&utm_campaign=hermes-fxmacrodata&utm_content=subscribe)** for access to non-USD datasets, FX rates, commodities, positioning and full available history.
+## Install and first research workflow
 
-You can evaluate the plugin before subscribing. Without a key, the REST tools serve the data catalogue for every currency, the USD release calendar and the most recent 90 days of USD announcements on a 15-minute delay, with a fair-use limit of 100 requests a day. Through the hosted MCP tools, USD releases, the USD calendar and the USD catalogue work without a key; other currencies, FX rates and the rest need a key.
-
-The full inventory contains 23 public REST operations and 49 hosted MCP tools, plus a `/fxmacrodata` USD macro brief command. Every operation has its own native tool and original input schema. See [the operation matrix](CAPABILITIES.md).
-
-## Install
+Use Hermes 0.22.5 or newer. The official plugin catalogue points to the FXMacroData-owned plugin.
 
 ```bash
 hermes plugins install fxmacrodata/hermes-fxmacrodata
 hermes plugins enable fxmacrodata
 ```
 
-Hermes installs the plugin's PyPI dependencies (`requests`, `urllib3`, `jsonschema`, `referencing`) with bounded version ranges. The FXMacroData client ships inside the plugin, so nothing is downloaded from outside PyPI.
+Restart Hermes, then ask: “Use FXMacroData to discover USD indicators, inspect policy-rate history and show the upcoming calendar with sources.” `/fxmacrodata policy_rate` builds the native USD brief. This baseline needs no key, account or card.
 
-Restart Hermes after enabling the plugin. Ask: "Use FXMacroData to discover USD indicators, inspect policy-rate history, and show the upcoming release calendar with source citations." Or enter `/fxmacrodata policy_rate`.
+There are 100 registered tools: 41 REST operations, 57 hosted MCP tools, a USD brief and a version-pinned history snapshot. Original input schemas, source URLs and response envelopes remain available. [OPERATIONS.json](OPERATIONS.json) lists every tool; [CAPABILITIES.md](CAPABILITIES.md) lists the native contract coverage.
 
-You can also install the package into the Python environment Hermes runs in (`uv pip install .`) and enable it through its `hermes_agent.plugins` entry point. Validate a checkout with `hermes plugins validate /path/to/hermes-fxmacrodata --install-deps`.
+## A useful research sequence
 
-## Connect your subscription
+1. Call `fxmd_data_catalogue` with `{"currency":"USD"}` and choose a real indicator slug.
+2. Call `fxmd_indicator_history_snapshot` with the currency, slug and a YYYY-MM-DD date window when you need all authorised pages. Ordinary `fxmd_indicator_history` is a page query.
+3. Call `fxmd_release_calendar` with explicit release dates and `timezone:"UTC"` for a scheduled window.
+4. Use predictions, news, FX, sessions, positioning, commodities or seasonality tools for the question you are investigating; keep their data classes and source labels distinct.
 
-Set `FXMACRODATA_API_KEY` in the process environment or a configured Hermes secret source. It is the only credential the plugin reads, and it is optional. Do not place keys in prompts, tool arguments, plugin settings, shared files or command history.
+The snapshot buffers the entire requested window before returning. It pins the first `dataset_version` on continuation, validates contiguous offsets and row counts and refuses repeated pages, missing metadata, version changes or partial failures. Its `complete` flag applies to the requested authorised window, not all history ever published. The safety ceiling is 10,000 pages.
 
-The key is read when a call starts, trimmed, and refused (without being repeated) if it contains spaces or control characters. REST calls send it as an `X-API-Key` header and MCP calls as an `Authorization: Bearer` header; it never appears in a URL. Redirects are never followed, so the key cannot be forwarded to another host. Each call closes its own HTTP/MCP session.
+The brief deliberately requests 10 history rows plus a UTC calendar window from today through seven days ahead. Its `complete` flag means that its three sections succeeded; `scope.history_complete` is false. Empty sections remain empty and failed sections are explicit.
 
-The only plugin setting is `plugins.entries.fxmacrodata.settings.timeout_seconds` (default 30, clamped to 1-120 seconds).
+## Connect protected scope
 
-## Network, files and processes
+Configure the optional API key through the native plugin settings secret field. Hermes supplies it as the profile-scoped `FXMACRODATA_API_KEY` secret. Never put it in a prompt, tool argument or shared file. REST sends `X-API-Key`; MCP sends Bearer authentication. Redirects are refused and each call closes its session. The timeout setting defaults to 30 seconds and is bounded to 1–120 seconds.
 
-- Tool calls make HTTPS requests to `api.fxmacrodata.com` (REST) and `mcp.fxmacrodata.com` (hosted MCP) only, carrying the tool arguments and, when set, your `FXMACRODATA_API_KEY`. Nothing else is contacted.
-- Registering the tools makes no network calls. The tool list is packaged with the plugin; it is not fetched at runtime and the plugin never updates itself.
-- The plugin writes no files, runs no shell commands, starts no background processes and stores no credentials. `fxmd_stream_events` captures a finite number of events within a finite timeout and then closes.
-- No telemetry or usage reporting. Static campaign tags appear only on fxmacrodata.com website links in tool output.
+Only `api.fxmacrodata.com` and `mcp.fxmacrodata.com` are contacted for tool calls. Registration performs no network call. The plugin stores no keys, writes no files, starts no background processes and adds no telemetry. Its SSE tool collects a bounded event snapshot, then closes.
 
-## Results and research
+## Dates, values and evidence
 
-Tool results contain the original response in `data`, an additive `records` view, the operation name and source citations. Pagination and date filters keep their public API meanings: list endpoints return 20 rows by default, and calendar `date` is the reference period while `announcement_datetime` is the release time.
+`date` is an observation/reference period, not proof that the figure was public then. Preserve `announcement_date`, `announcement_datetime`, `time_announced`, `publication_time_status`, `release_time_assumed`, `capture_time_basis`, collection clocks, source links and revisions together. A confirmed publisher time is different from an official future schedule or a collection timestamp. If `time_announced` is false, the calendar provides a date without a confirmed clock. Unknown or assumed times cannot establish an exact historical availability cutoff. Null values stay null. Prediction classes, publisher forecasts, consensus and FXMacroData calculations retain their labels.
 
-Keyless responses can carry free-tier window and delay messages. The plugin copies them into a `notices` list so the agent can say that data is delayed or limited instead of presenting it as current. A successful HTTP status whose body is an error (for example `api_key_required`) is reported as an error with the subscribe link. Currency codes, YYYY-MM-DD dates, date ranges and indicator slugs are validated before any request is made.
+Public USD catalogue, history and calendar work without a key, account or card. Returned notices describe the authorised window and any delay. Protected non-USD, FX, COT, commodity and other scope depends on the endpoint and your subscription; an API key is not a guarantee that every dataset exists. See the [API reference](https://fxmacrodata.com/documentation/reference?utm_source=hermes&utm_medium=integration&utm_campaign=hermes-fxmacrodata&utm_content=readme) and [access plans](https://fxmacrodata.com/subscribe?utm_source=hermes&utm_medium=integration&utm_campaign=hermes-fxmacrodata&utm_content=readme).
 
-`fxmd_usd_macro_brief` composes catalogue discovery, recent history and the release calendar. Failed sections remain explicit and `complete` is false; empty records are unavailable data. Keep observed releases, scheduled events, market consensus and FXMacroData-generated predictions distinct. MCP text, structured content and resource links are preserved; interactive MCP Apps are not rendered by this plugin.
+## Results and troubleshooting
 
-[FXMacroData](https://fxmacrodata.com/?utm_source=github&utm_medium=referral&utm_campaign=hermes-fxmacrodata&utm_content=readme) · [Public API reference](https://fxmacrodata.com/documentation/reference?utm_source=github&utm_medium=referral&utm_campaign=hermes-fxmacrodata&utm_content=docs)
+`data` preserves the original result, `records` is an additive projection, and `citations` includes provider and original publisher URLs when present. Free-access notices remain visible. MCP structured content, resource links and artifacts remain in the response; Hermes does not render interactive MCP Apps through this plugin.
+
+If tools do not appear, check the host minimum, enable the plugin and restart Hermes. If a result reports access denied, check the secret and requested scope. If a snapshot fails, rerun its entire window rather than joining different versions. A successful HTTP response with an error body is still a tool error. Do not interpret unknown or assumed release times as confirmed publication.
+
+[Official catalogue](https://github.com/NousResearch/hermes-agent/blob/main/plugin-catalog/fxmacrodata.yaml?utm_source=hermes&utm_medium=integration&utm_campaign=hermes-fxmacrodata&utm_content=readme) · [Source](https://github.com/fxmacrodata/hermes-fxmacrodata?utm_source=hermes&utm_medium=integration&utm_campaign=hermes-fxmacrodata&utm_content=readme) · [API reference](https://fxmacrodata.com/documentation/reference?utm_source=hermes&utm_medium=integration&utm_campaign=hermes-fxmacrodata&utm_content=readme)
+
+MIT covers the adapter and its packaged FXMacroData-owned public client. FXMacroData brand references identify the provider without granting trademark rights.
+
+## Profile-scoped optional credential
+
+Configure the optional API key in the native plugin settings secret field. The plugin reads `FXMACRODATA_API_KEY` through `agent.secret_scope.get_secret`, so profile multiplexing cannot silently use another profile's process key. It does not read environment files, auth files, keychains or a browser login. If the host secret API is unavailable, public no-key access remains available and no process-environment credential fallback is used. The public client receives this value explicitly.
+
+Version 0.3.0 exposes the current public contract inventory, including read-only research-panel POST, and preserves version-pinned history traversal. Research inputs, including user-entered FX positions, are sent to the fixed FXMacroData services. Public USD access needs no account or payment; protected datasets depend on your FXMacroData entitlement, and host/model charges are separate. Official native validation and profile-isolation checks passed on Hermes 0.22.5 and the current development version. The reviewed public catalogue pin may lag the source release.
+
+The refresh targets Hermes 0.22.5 or later for the native optional secret configuration and profile-aware secret API. Earlier Hermes releases are not certified by this update.
